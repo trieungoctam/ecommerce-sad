@@ -1,56 +1,55 @@
-from rest_framework import viewsets, status
+from rest_framework_mongoengine.viewsets import ModelViewSet
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework import status
 from .models import Book
 from .serializers import BookSerializer
-from mongoengine.errors import DoesNotExist
 
-# Create your views here.
+class BookViewSet(ModelViewSet):
+    serializer_class = BookSerializer
+    lookup_field = 'id'  # MongoEngine sử dụng id dạng ObjectId
+    queryset = Book.objects.all()
 
-class BookViewSet(viewsets.ViewSet):
-    """
-    API endpoint for books
-    """
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    def perform_create(self, serializer):
+        # Cập nhật thời gian tạo và cập nhật
+        serializer.validated_data['created'] = serializer.validated_data.get('created', None) or datetime.datetime.utcnow()
+        serializer.validated_data['updated'] = datetime.datetime.utcnow()
+        serializer.save()
 
-    def list(self, request):
-        queryset = Book.objects.all()
-        title = request.query_params.get('title', None)
-        if title:
-            queryset = queryset.filter(title__icontains=title)
-        serializer = BookSerializer(queryset, many=True)
+    def perform_update(self, serializer):
+        # Cập nhật lại trường updated khi cập nhật sách
+        serializer.validated_data['updated'] = datetime.datetime.utcnow()
+        serializer.save()
+
+    @action(detail=False, methods=['get'])
+    def search(self, request):
+        """
+        Tìm kiếm sách theo tiêu đề hoặc tác giả.
+        Ví dụ: /api/books/search/?q=Harry
+        """
+        query = request.query_params.get('q', '')
+        if not query:
+            return Response({"detail": "Please provide a search query using parameter 'q'."}, status=status.HTTP_400_BAD_REQUEST)
+        books = Book.objects.filter(title__icontains=query) | Book.objects.filter(author__icontains=query)
+        serializer = self.get_serializer(books, many=True)
         return Response(serializer.data)
 
-    def create(self, request):
-        serializer = BookSerializer(data=request.data)
-        if serializer.is_valid():
-            book = serializer.save()
-            return Response(BookSerializer(book).data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def retrieve(self, request, pk=None):
+    @action(detail=True, methods=['patch'])
+    def update_price(self, request, id=None):
+        """
+        Cập nhật giá sách.
+        Endpoint: /api/books/{id}/update_price/
+        Yêu cầu JSON: {"price": 29.99}
+        """
+        book = self.get_object()
+        new_price = request.data.get('price')
+        if new_price is None:
+            return Response({"detail": "Price not provided."}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            book = Book.objects.get(id=pk)
-            serializer = BookSerializer(book)
+            book.price = float(new_price)
+            book.updated = datetime.datetime.utcnow()
+            book.save()
+            serializer = self.get_serializer(book)
             return Response(serializer.data)
-        except DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-    def update(self, request, pk=None):
-        try:
-            book = Book.objects.get(id=pk)
-            serializer = BookSerializer(book, data=request.data)
-            if serializer.is_valid():
-                book = serializer.save()
-                return Response(BookSerializer(book).data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-    def destroy(self, request, pk=None):
-        try:
-            book = Book.objects.get(id=pk)
-            book.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)

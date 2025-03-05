@@ -1,41 +1,32 @@
 from django.db import models
 from django.conf import settings
-from decimal import Decimal
 
 class Cart(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        db_table = 'carts'
-        ordering = ['-created_at']
-
-    @property
-    def total_price(self):
-        return sum(item.total_price for item in self.items.all())
+    customer_id = models.CharField(max_length=255)
+    created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Cart {self.id} - {self.user.username}"
+        return f"Cart of {self.customer.email}"
+
 
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
-    product_type = models.CharField(max_length=50)  # 'book', 'mobile', 'shoes'
-    product_id = models.CharField(max_length=100)  # MongoDB ObjectId or other ID
+    cart = models.ForeignKey(
+        Cart,
+        on_delete=models.CASCADE,
+        related_name='items'
+    )
+    product_type = models.CharField(
+        max_length=50,
+        help_text="Loại sản phẩm (ví dụ: 'book', 'mobile', 'shoes', 'clothes')"
+    )
+    product_id = models.CharField(
+        max_length=100,
+        help_text="ID sản phẩm từ service tương ứng (có thể là ObjectId dạng chuỗi)"
+    )
+    product_name = models.CharField(max_length=255)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     added_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'cart_items'
-        ordering = ['-added_at']
-        unique_together = ('cart', 'product_type', 'product_id')
-
-    @property
-    def total_price(self):
-        return Decimal(str(self.price)) * self.quantity
 
     def __str__(self):
-        return f"{self.product_type} - {self.product_id} ({self.quantity})"
+        return f"{self.quantity} x {self.product_name} in Cart {self.cart.id}"

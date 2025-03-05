@@ -1,7 +1,19 @@
 from django.urls import path
-from .views import UserRegisterView, UserProfilesView
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+from .views import CustomerRegistrationView, CustomerDetailView
 
 urlpatterns = [
-    path('register/', UserRegisterView.as_view(), name='user-register'),
-    path('profile/', UserProfilesView.as_view(), name='user-profile'),
+    # Endpoint đăng ký (không cần auth)
+    path('register/', CustomerRegistrationView.as_view(), name='customer-register'),
+
+    # Endpoint lấy token (đăng nhập)
+    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # Endpoint refresh token
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    # Endpoint lấy/chỉnh sửa thông tin cá nhân (yêu cầu authentication)
+    path('<int:id>/', CustomerDetailView.as_view(), name='customer-detail'),
 ]

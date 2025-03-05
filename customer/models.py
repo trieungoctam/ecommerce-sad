@@ -1,91 +1,102 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import (
+    AbstractBaseUser, PermissionsMixin, BaseUserManager
+)
+from django.utils.translation import gettext_lazy as _
 
-# Create your models here.
-class User(AbstractUser):
-    """
-    Custom User Model with 4 type:
-    1. Guest
-    2. Registered
-    3. Premium
-    4. Admin
-    """
+class CustomerManager(BaseUserManager):
+    def create_user(self, email, user_type, password=None, **extra_fields):
+        """
+        Tạo và lưu một User với email và password.
+        """
+        if not email:
+            raise ValueError("Email phải được cung cấp!")
+        if user_type not in [Customer.UserType.GUEST, Customer.UserType.REGISTERED, Customer.UserType.PREMIUM]:
+            raise ValueError("user_type không hợp lệ cho user thường!")
 
-    USER_TYPE = (
-        ('guest', 'Guest'),
-        ('registered', 'Registered'),
-        ('premium', 'Premium'),
-        ('admin', 'Admin'),
+        email = self.normalize_email(email)
+        user = self.model(email=email, user_type=user_type, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password, **extra_fields):
+        """
+        Tạo và lưu một superuser với email và password.
+        Superuser sẽ có user_type là Admin.
+        """
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        user_type = Customer.UserType.ADMIN
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser phải có is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser phải có is_superuser=True.')
+
+        email = self.normalize_email(email)
+        user = self.model(email=email, user_type=user_type, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+
+class Customer(AbstractBaseUser, PermissionsMixin):
+    class UserType(models.TextChoices):
+        GUEST = 'GUEST', 'Guest'
+        REGISTERED = 'REGISTERED', 'Registered'
+        PREMIUM = 'PREMIUM', 'Premium'
+        ADMIN = 'ADMIN', 'Admin'
+
+    email = models.EmailField(unique=True, max_length=255)
+    full_name = models.CharField(max_length=255, blank=True)
+    user_type = models.CharField(
+        max_length=20,
+        choices=UserType.choices,
+        default=UserType.GUEST,
     )
 
-    user_type = models.CharField(max_length=20, choices=USER_TYPE, default='guest')
-    phone_number = models.CharField(max_length=15, blank=True, null=True)
-    address = models.TextField(max_length=255, blank=True, null=True)
+    groups = models.ManyToManyField(
+        'auth.Group',
+        verbose_name=_('groups'),
+        blank=True,
+        related_name='customer_set',
+        help_text=_('The groups this user belongs to.'),
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        verbose_name=_('user permissions'),
+        blank=True,
+        related_name='customer_set',
+        help_text=_('Specific permissions for this user.'),
+    )
+
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)  # Dành cho admin site
+
+    # Các trường bổ sung khác nếu cần, ví dụ: phone, address,...
+    address = models.CharField(max_length=255, blank=True)
+
+    objects = CustomerManager()
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []  # Email được coi là bắt buộc, còn lại có thể mở rộng
 
     def __str__(self):
-        return f"{self.username} ({self.user_type})"
+        return self.email
 
-    def get_profile_info(self):
-        """
-        Get user profile info
-        """
+class Address(models.Model):
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.CASCADE,
+        related_name='addresses'
+    )
+    address_line1 = models.CharField(max_length=255, help_text="Số nhà, tên đường")
+    address_line2 = models.CharField(max_length=255, blank=True, null=True, help_text="Thông tin bổ sung (nếu có)")
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100, blank=True, null=True)
+    postal_code = models.CharField(max_length=20)
+    country = models.CharField(max_length=100)
 
-        return {
-            'username': self.username,
-            'email': self.email,
-            'phone': self.phone,
-            'address': self.address,
-            'user_type': self.user_type,
-        }
-
-    def upgrade_to_premium(self):
-        """
-        Upgrade user to premium
-        """
-
-        self.user_type = 'premium'
-        self.save()
-
-    def downgrade_to_registered(self):
-        """
-        Downgrade user to registered
-        """
-
-        self.user_type = 'registered'
-        self.save()
-
-    def promote_to_admin(self):
-        """
-        Promote user to admin
-        """
-
-        self.user_type = 'admin'
-        self.save()
-
-    def is_guest(self):
-        """
-        Check if user is guest
-        """
-
-        return self.user_type == 'guest'
-
-    def is_registered(self):
-        """
-        Check if user is registered
-        """
-
-        return self.user_type == 'registered'
-
-    def is_premium(self):
-        """
-        Check if user is premium
-        """
-
-        return self.user_type == 'premium'
-
-    def is_admin(self):
-        """
-        Check if user is admin
-        """
-
-        return self.user_type == 'admin'
+    def __str__(self):
+        return f"{self.address_line1}, {self.city}, {self.country}"

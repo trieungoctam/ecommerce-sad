@@ -1,6 +1,6 @@
 venv/
 
-__pycache/
+__pycache__/
 
 box/
 
@@ -9,3 +9,5 @@ box.zip
 .vscode/
 
 infra/infra/
+
+migrations/

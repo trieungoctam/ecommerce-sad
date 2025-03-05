@@ -1,24 +1,19 @@
-from django.shortcuts import render
 from rest_framework import generics, permissions
-from .models import User
-from .serializers import UserSerializer
-# Create your views here.
+from .models import Customer
+from .serializers import CustomerRegistrationSerializer, CustomerSerializer
 
-class UserRegisterView(generics.CreateAPIView):
+class CustomerRegistrationView(generics.CreateAPIView):
     """
-    Register a new user
+    Endpoint đăng ký khách hàng mới.
     """
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+    queryset = Customer.objects.all()
+    serializer_class = CustomerRegistrationSerializer
     permission_classes = [permissions.AllowAny]
 
-class UserProfilesView(generics.RetrieveUpdateAPIView):
+class CustomerDetailView(generics.RetrieveUpdateAPIView):
     """
-    Show and update user profile
+    Lấy chi tiết và cập nhật thông tin khách hàng.
     """
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_object(self):
-        return self.request.user
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+    lookup_field = 'id'

@@ -17,9 +17,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from django_mongoengine import mongo_admin
+
 urlpatterns = [
-    path('', include('book.urls')),
+    # path('', include('book.urls')),
     path('admin/', admin.site.urls),
+    path('mongo-admin/', mongo_admin.site.urls),
     path('api/customer/', include('customer.urls')),
-    path('api/', include('book.urls')),
+    path('api/books', include('book.urls')),
+    path('api/mobile/', include('mobile.urls')),
+    path('api/shoes/', include('shoes.urls')),
+    path('api/clothes/', include('clothes.urls')),
+    path('api/cart/', include('cart.urls')),
 ]

@@ -4,4 +4,8 @@ pymysql
 cryptography
 mongoengine
 django-mongoengine
+django-rest-framework-mongoengine
 psycopg2
+djangorestframework-simplejwt
+
+requests

@@ -44,18 +44,17 @@ INSTALLED_APPS = [
     'book',
     'cart',
     'order',
-    'payment',
     'clothes',
     'mobile',
     'shoes',
-    'shipping',
-    'search',
+    # 'payment',
+    # 'shipping',
+    # 'cms',
     'customer',
-    'cms',
     'gateway',
 ]
 
-AUTH_USER_MODEL = 'customer.User'
+# AUTH_USER_MODEL = 'customer.Customer'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -112,7 +111,7 @@ DATABASES = {
 
 # MongoDB settings for specific apps
 MONGODB_DATABASES = {
-    'books': {
+    'book': {
         'name': 'ecommerce_books',
         'host': 'localhost',
         'port': 27017,
@@ -142,21 +141,31 @@ DATABASE_ROUTERS = [
 # App-Database Mapping
 DATABASE_APPS_MAPPING = {
     # MongoDB Apps (using mongoengine)
-    'book': 'mongodb',
-    'mobile': 'mongodb',
-    'shoes': 'mongodb',
+    'book': 'book',
+    'mobile': 'mobile',
+    'shoes': 'shoes',
+    'clothes': 'clothes',
 
     # PostgreSQL Apps
     'payment': 'postgresql',
     'shipping': 'postgresql',
     'order': 'postgresql',
+    'cart': 'postgresql',
 
     # MySQL Apps (default)
     'customer': 'default',
-    'cart': 'default',
     'cms': 'default',
     'gateway': 'default',
 }
+
+# Nếu muốn, định nghĩa kết nối default để làm fallback
+connect(
+    db='default_db',
+    alias='default',
+    host='localhost',
+    port=27017,
+    authentication_source='admin',
+)
 
 # Initialize MongoDB connections
 for app_name, db_config in MONGODB_DATABASES.items():
@@ -164,26 +173,36 @@ for app_name, db_config in MONGODB_DATABASES.items():
         db=db_config['name'],
         host=db_config['host'],
         port=db_config['port'],
-        alias=app_name
+        alias=app_name,
+        authentication_source='admin',
     )
 
+# Rest Framework settings
+REST_FRAMEWORK = {
+    # 'DEFAULT_AUTHENTICATION_CLASSES': (
+    #     'rest_framework_simplejwt.authentication.JWTAuthentication',
+    # ),
+    # 'DEFAULT_PERMISSION_CLASSES': (
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ),
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    # },
 ]
 
 
