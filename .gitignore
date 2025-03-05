@@ -1,0 +1,11 @@
+venv/
+
+__pycache/
+
+box/
+
+box.zip
+
+.vscode/
+
+infra/infra/

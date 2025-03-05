@@ -1,0 +1,7 @@
+django
+djangorestframework
+pymysql
+cryptography
+mongoengine
+django-mongoengine
+psycopg2

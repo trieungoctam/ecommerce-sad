@@ -1,0 +1,42 @@
+networks:
+  ecommerce:
+    driver: bridge
+
+services:
+  ecommerce_mysql:
+    image: mysql:8.0
+    container_name: ecommerce_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ecommerce
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./infra/mysql:/var/lib/mysql
+    restart: always
+
+  ecommerce_postgres:
+    image: postgres:14.5
+    container_name: ecommerce_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ecommerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./infra/postgres:/var/lib/postgresql/data
+    restart: always
+  ecommerce_mongo:
+    image: mongo:6.0.5
+    container_name: ecommerce_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./infra/mongo:/data/db
+    restart: always
+
+volumes:
+  mysql:
+  postgres:
+  mongo:
