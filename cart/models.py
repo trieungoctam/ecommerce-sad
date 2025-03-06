@@ -5,9 +5,6 @@ class Cart(models.Model):
     customer_id = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Cart of {self.customer.email}"
-
 
 class CartItem(models.Model):
     cart = models.ForeignKey(

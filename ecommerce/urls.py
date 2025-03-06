@@ -24,7 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('mongo-admin/', mongo_admin.site.urls),
     path('api/customer/', include('customer.urls')),
-    path('api/books', include('book.urls')),
+    path('api/books/', include('book.urls')),
     path('api/mobile/', include('mobile.urls')),
     path('api/shoes/', include('shoes.urls')),
     path('api/clothes/', include('clothes.urls')),

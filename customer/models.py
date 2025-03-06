@@ -74,9 +74,6 @@ class Customer(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)  # Dành cho admin site
 
-    # Các trường bổ sung khác nếu cần, ví dụ: phone, address,...
-    address = models.CharField(max_length=255, blank=True)
-
     objects = CustomerManager()
 
     USERNAME_FIELD = 'email'

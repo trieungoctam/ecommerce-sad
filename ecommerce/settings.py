@@ -42,19 +42,17 @@ INSTALLED_APPS = [
     'django_mongoengine.mongo_admin',
     'rest_framework',
     'book',
-    'cart',
-    'order',
     'clothes',
     'mobile',
     'shoes',
-    # 'payment',
-    # 'shipping',
-    # 'cms',
+    'order',
+    'cart',
+    'payment',
+    'shipping',
     'customer',
-    'gateway',
 ]
 
-# AUTH_USER_MODEL = 'customer.Customer'
+AUTH_USER_MODEL = 'customer.Customer'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -150,9 +148,9 @@ DATABASE_APPS_MAPPING = {
     'payment': 'postgresql',
     'shipping': 'postgresql',
     'order': 'postgresql',
-    'cart': 'postgresql',
 
     # MySQL Apps (default)
+    'cart': 'default',
     'customer': 'default',
     'cms': 'default',
     'gateway': 'default',
@@ -179,12 +177,14 @@ for app_name, db_config in MONGODB_DATABASES.items():
 
 # Rest Framework settings
 REST_FRAMEWORK = {
-    # 'DEFAULT_AUTHENTICATION_CLASSES': (
-    #     'rest_framework_simplejwt.authentication.JWTAuthentication',
-    # ),
-    # 'DEFAULT_PERMISSION_CLASSES': (
-    #     'rest_framework.permissions.IsAuthenticated',
-    # ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    # other settings...
 }
 
 # Password validation
